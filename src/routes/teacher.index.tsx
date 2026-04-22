@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Radio, X, Bell, BookOpen } from "lucide-react";
+import { Play, Radio, X, Bell, BookOpen, Users } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -15,7 +15,13 @@ import {
 import { BottomNav } from "@/components/BottomNav";
 import { AIInsightCard } from "@/components/AIInsightCard";
 import { teacherSubjects, monthlyAttendance } from "@/lib/mockData";
-import { startSession, endSession, getActiveSession, getUser } from "@/lib/session";
+import {
+  startSession,
+  endSession,
+  getActiveSession,
+  getUser,
+  getStudents,
+} from "@/lib/session";
 
 export const Route = createFileRoute("/teacher/")({
   component: TeacherDashboard,
@@ -26,10 +32,22 @@ function genOtp() {
 }
 
 function TeacherDashboard() {
-  const user = typeof window !== "undefined" ? getUser() : { name: "Teacher", id: "" };
+  const user =
+    typeof window !== "undefined"
+      ? getUser()
+      : { name: "", id: "", department: "", semester: "" };
   const [activeSubject, setActiveSubject] = useState<string | null>(null);
   const [otp, setOtp] = useState("");
   const [remaining, setRemaining] = useState(30);
+  const [students, setStudents] = useState<ReturnType<typeof getStudents>>([]);
+
+  useEffect(() => {
+    setStudents(getStudents());
+  }, []);
+
+  const myStudents = user.department
+    ? students.filter((s) => s.department === user.department)
+    : students;
 
   useEffect(() => {
     const s = getActiveSession();
@@ -81,8 +99,11 @@ function TeacherDashboard() {
         <div className="flex items-start justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest opacity-80">Faculty</p>
-            <h1 className="font-display text-2xl font-bold">{user.name}</h1>
-            <p className="mt-1 text-xs opacity-80">{user.id} · CSE Dept</p>
+            <h1 className="font-display text-2xl font-bold">{user.name || "Teacher"}</h1>
+            <p className="mt-1 text-xs opacity-80">
+              {user.id}
+              {user.department ? ` · ${user.department}` : ""}
+            </p>
           </div>
           <button className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15 backdrop-blur">
             <Bell className="h-5 w-5" />
