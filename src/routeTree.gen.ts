@@ -15,10 +15,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as TeacherIndexRouteImport } from './routes/teacher.index'
 import { Route as StudentIndexRouteImport } from './routes/student.index'
 import { Route as TeacherProfileRouteImport } from './routes/teacher.profile'
-import { Route as TeacherAiRouteImport } from './routes/teacher.ai'
 import { Route as StudentProfileRouteImport } from './routes/student.profile'
 import { Route as StudentOtpRouteImport } from './routes/student.otp'
-import { Route as StudentAiRouteImport } from './routes/student.ai'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -50,11 +48,6 @@ const TeacherProfileRoute = TeacherProfileRouteImport.update({
   path: '/teacher/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TeacherAiRoute = TeacherAiRouteImport.update({
-  id: '/teacher/ai',
-  path: '/teacher/ai',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const StudentProfileRoute = StudentProfileRouteImport.update({
   id: '/student/profile',
   path: '/student/profile',
@@ -65,20 +58,13 @@ const StudentOtpRoute = StudentOtpRouteImport.update({
   path: '/student/otp',
   getParentRoute: () => rootRouteImport,
 } as any)
-const StudentAiRoute = StudentAiRouteImport.update({
-  id: '/student/ai',
-  path: '/student/ai',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/student/ai': typeof StudentAiRoute
   '/student/otp': typeof StudentOtpRoute
   '/student/profile': typeof StudentProfileRoute
-  '/teacher/ai': typeof TeacherAiRoute
   '/teacher/profile': typeof TeacherProfileRoute
   '/student/': typeof StudentIndexRoute
   '/teacher/': typeof TeacherIndexRoute
@@ -87,10 +73,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/student/ai': typeof StudentAiRoute
   '/student/otp': typeof StudentOtpRoute
   '/student/profile': typeof StudentProfileRoute
-  '/teacher/ai': typeof TeacherAiRoute
   '/teacher/profile': typeof TeacherProfileRoute
   '/student': typeof StudentIndexRoute
   '/teacher': typeof TeacherIndexRoute
@@ -100,10 +84,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/student/ai': typeof StudentAiRoute
   '/student/otp': typeof StudentOtpRoute
   '/student/profile': typeof StudentProfileRoute
-  '/teacher/ai': typeof TeacherAiRoute
   '/teacher/profile': typeof TeacherProfileRoute
   '/student/': typeof StudentIndexRoute
   '/teacher/': typeof TeacherIndexRoute
@@ -114,10 +96,8 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/register'
-    | '/student/ai'
     | '/student/otp'
     | '/student/profile'
-    | '/teacher/ai'
     | '/teacher/profile'
     | '/student/'
     | '/teacher/'
@@ -126,10 +106,8 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/register'
-    | '/student/ai'
     | '/student/otp'
     | '/student/profile'
-    | '/teacher/ai'
     | '/teacher/profile'
     | '/student'
     | '/teacher'
@@ -138,10 +116,8 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/register'
-    | '/student/ai'
     | '/student/otp'
     | '/student/profile'
-    | '/teacher/ai'
     | '/teacher/profile'
     | '/student/'
     | '/teacher/'
@@ -151,10 +127,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
-  StudentAiRoute: typeof StudentAiRoute
   StudentOtpRoute: typeof StudentOtpRoute
   StudentProfileRoute: typeof StudentProfileRoute
-  TeacherAiRoute: typeof TeacherAiRoute
   TeacherProfileRoute: typeof TeacherProfileRoute
   StudentIndexRoute: typeof StudentIndexRoute
   TeacherIndexRoute: typeof TeacherIndexRoute
@@ -204,13 +178,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeacherProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/teacher/ai': {
-      id: '/teacher/ai'
-      path: '/teacher/ai'
-      fullPath: '/teacher/ai'
-      preLoaderRoute: typeof TeacherAiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/student/profile': {
       id: '/student/profile'
       path: '/student/profile'
@@ -225,13 +192,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StudentOtpRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/student/ai': {
-      id: '/student/ai'
-      path: '/student/ai'
-      fullPath: '/student/ai'
-      preLoaderRoute: typeof StudentAiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -239,10 +199,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
-  StudentAiRoute: StudentAiRoute,
   StudentOtpRoute: StudentOtpRoute,
   StudentProfileRoute: StudentProfileRoute,
-  TeacherAiRoute: TeacherAiRoute,
   TeacherProfileRoute: TeacherProfileRoute,
   StudentIndexRoute: StudentIndexRoute,
   TeacherIndexRoute: TeacherIndexRoute,
