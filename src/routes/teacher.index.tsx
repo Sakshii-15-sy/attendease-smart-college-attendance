@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Radio, X, Bell, BookOpen, Users } from "lucide-react";
+import { Play, Radio, X, Bell, BookOpen, Users, Download } from "lucide-react";
+import { DownloadReportModal } from "@/components/DownloadReportModal";
 import {
   BarChart,
   Bar,
@@ -40,6 +41,7 @@ function TeacherDashboard() {
   const [otp, setOtp] = useState("");
   const [remaining, setRemaining] = useState(30);
   const [students, setStudents] = useState<ReturnType<typeof getStudents>>([]);
+  const [reportOpen, setReportOpen] = useState(false);
 
   useEffect(() => {
     setStudents(getStudents());
@@ -109,6 +111,14 @@ function TeacherDashboard() {
             <Bell className="h-5 w-5" />
           </button>
         </div>
+
+        <button
+          onClick={() => setReportOpen(true)}
+          className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-white/15 px-4 py-3 text-sm font-semibold text-primary-foreground backdrop-blur transition hover:bg-white/25"
+        >
+          <Download className="h-4 w-4" />
+          Download Attendance Report
+        </button>
       </div>
 
       <div className="-mt-16 space-y-5 px-4">
@@ -310,6 +320,12 @@ function TeacherDashboard() {
       </div>
 
       <BottomNav role="teacher" />
+
+      <DownloadReportModal
+        open={reportOpen}
+        onClose={() => setReportOpen(false)}
+        department={user.department}
+      />
     </div>
   );
 }
