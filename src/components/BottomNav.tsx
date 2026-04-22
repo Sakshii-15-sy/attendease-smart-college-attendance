@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
-import { Home, MessageCircle, User, LogOut } from "lucide-react";
+import { Home, User, LogOut } from "lucide-react";
 import { logout } from "@/lib/session";
 
 interface Props {
@@ -12,7 +12,6 @@ export function BottomNav({ role }: Props) {
   const base = role === "student" ? "/student" : "/teacher";
   const items = [
     { to: base, icon: Home, label: "Home" },
-    { to: `${base}/ai`, icon: MessageCircle, label: "AI" },
     { to: `${base}/profile`, icon: User, label: "Profile" },
   ];
 
