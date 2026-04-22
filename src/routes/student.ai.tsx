@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Send, Sparkles, ArrowLeft } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import { BottomNav } from "@/components/BottomNav";
+import { getUser } from "@/lib/session";
 
 export const Route = createFileRoute("/student/ai")({
   component: StudentAI,
@@ -27,10 +28,12 @@ function smartReply(q: string): string {
 }
 
 function StudentAI() {
+  const firstName =
+    (typeof window !== "undefined" ? getUser().name : "").split(" ")[0] || "there";
   const [messages, setMessages] = useState<Msg[]>([
     {
       role: "ai",
-      content: "Hi Aanya! I'm your attendance assistant 🤖. Ask me anything — like 'How many classes can I miss in Maths?'",
+      content: `Hi ${firstName}! I'm your attendance assistant 🤖. Ask me anything — like 'How many classes can I miss in Maths?'`,
     },
   ]);
   const [input, setInput] = useState("");

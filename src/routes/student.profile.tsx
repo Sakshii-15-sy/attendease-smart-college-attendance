@@ -9,8 +9,17 @@ export const Route = createFileRoute("/student/profile")({
 });
 
 function StudentProfile() {
-  const user = typeof window !== "undefined" ? getUser() : { name: "Student", id: "" };
+  const user =
+    typeof window !== "undefined"
+      ? getUser()
+      : { name: "", id: "", department: "", semester: "" };
   const overall = getOverall(studentSubjects);
+  const initials =
+    user.name
+      .split(" ")
+      .map((n) => n[0])
+      .slice(0, 2)
+      .join("") || "S";
   return (
     <div className="min-h-screen pb-28">
       <div className="bg-gradient-hero px-6 pb-20 pt-10 text-primary-foreground">
@@ -19,9 +28,11 @@ function StudentProfile() {
       <div className="-mt-16 px-4">
         <div className="rounded-3xl bg-card p-6 text-center shadow-card ring-1 ring-border">
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-primary font-display text-2xl font-bold text-primary-foreground shadow-glow">
-            {user.name.split(" ").map((n) => n[0]).join("")}
+            {initials}
           </div>
-          <h2 className="mt-3 font-display text-xl font-bold">{user.name}</h2>
+          <h2 className="mt-3 font-display text-xl font-bold">
+            {user.name || "Student"}
+          </h2>
           <p className="text-xs text-muted-foreground">{user.id}</p>
           <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-success/10 px-3 py-1 text-xs font-semibold text-success">
             Overall Attendance: {overall}%
@@ -29,10 +40,23 @@ function StudentProfile() {
         </div>
         <div className="mt-4 space-y-2 rounded-2xl bg-card p-4 shadow-card ring-1 ring-border">
           {[
-            { icon: GraduationCap, label: "Course", value: "B.Tech Computer Science · Sem 5" },
-            { icon: Calendar, label: "Joined", value: "Aug 2021" },
-            { icon: Mail, label: "Email", value: "aanya.verma@college.edu" },
-            { icon: Phone, label: "Phone", value: "+91 98765 43210" },
+            {
+              icon: GraduationCap,
+              label: "Course",
+              value:
+                user.department && user.semester
+                  ? `${user.department} · Sem ${user.semester}`
+                  : user.department || "—",
+            },
+            { icon: Calendar, label: "Roll Number", value: user.id || "—" },
+            {
+              icon: Mail,
+              label: "Email",
+              value: user.id
+                ? `${user.id.toLowerCase()}@college.edu`
+                : "—",
+            },
+            { icon: Phone, label: "Phone", value: "Not provided" },
           ].map((row) => {
             const Icon = row.icon;
             return (

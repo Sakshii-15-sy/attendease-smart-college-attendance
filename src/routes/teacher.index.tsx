@@ -217,7 +217,65 @@ function TeacherDashboard() {
           </div>
         </div>
 
-        {/* Chart */}
+        {/* My Students */}
+        <div className="rounded-3xl bg-card p-5 shadow-card ring-1 ring-border">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-primary">
+                <Users className="h-4 w-4" />
+              </div>
+              <div>
+                <h2 className="font-display text-base font-semibold">My Students</h2>
+                <p className="text-[11px] text-muted-foreground">
+                  {user.department || "All departments"}
+                </p>
+              </div>
+            </div>
+            <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
+              {myStudents.length} registered
+            </span>
+          </div>
+
+          {myStudents.length === 0 ? (
+            <div className="rounded-2xl bg-muted/40 p-5 text-center">
+              <p className="text-sm font-medium">No students yet</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Students who register in {user.department || "your department"} will appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {myStudents.map((s, i) => (
+                <motion.div
+                  key={s.id}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="flex items-center gap-3 rounded-xl bg-muted/40 p-3"
+                >
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-primary text-xs font-bold text-primary-foreground">
+                    {s.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .slice(0, 2)
+                      .join("")}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="truncate text-sm font-semibold">{s.name}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {s.id} · Sem {s.semester}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-card px-2 py-0.5 text-[10px] font-semibold text-muted-foreground ring-1 ring-border">
+                    {s.department.split(" ")[0]}
+                  </span>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+
+
         <div className="rounded-3xl bg-card p-5 shadow-card ring-1 ring-border">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-display text-base font-semibold">Monthly Trends · DBMS</h2>
