@@ -11,6 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as StudentIndexRouteImport } from './routes/student.index'
+import { Route as StudentProfileRouteImport } from './routes/student.profile'
+import { Route as StudentOtpRouteImport } from './routes/student.otp'
+import { Route as StudentAiRouteImport } from './routes/student.ai'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -22,31 +26,86 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudentIndexRoute = StudentIndexRouteImport.update({
+  id: '/student/',
+  path: '/student/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentProfileRoute = StudentProfileRouteImport.update({
+  id: '/student/profile',
+  path: '/student/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentOtpRoute = StudentOtpRouteImport.update({
+  id: '/student/otp',
+  path: '/student/otp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentAiRoute = StudentAiRouteImport.update({
+  id: '/student/ai',
+  path: '/student/ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/student/ai': typeof StudentAiRoute
+  '/student/otp': typeof StudentOtpRoute
+  '/student/profile': typeof StudentProfileRoute
+  '/student/': typeof StudentIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/student/ai': typeof StudentAiRoute
+  '/student/otp': typeof StudentOtpRoute
+  '/student/profile': typeof StudentProfileRoute
+  '/student': typeof StudentIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/student/ai': typeof StudentAiRoute
+  '/student/otp': typeof StudentOtpRoute
+  '/student/profile': typeof StudentProfileRoute
+  '/student/': typeof StudentIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/student/ai'
+    | '/student/otp'
+    | '/student/profile'
+    | '/student/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login'
-  id: '__root__' | '/' | '/login'
+  to:
+    | '/'
+    | '/login'
+    | '/student/ai'
+    | '/student/otp'
+    | '/student/profile'
+    | '/student'
+  id:
+    | '__root__'
+    | '/'
+    | '/login'
+    | '/student/ai'
+    | '/student/otp'
+    | '/student/profile'
+    | '/student/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LoginRoute: typeof LoginRoute
+  StudentAiRoute: typeof StudentAiRoute
+  StudentOtpRoute: typeof StudentOtpRoute
+  StudentProfileRoute: typeof StudentProfileRoute
+  StudentIndexRoute: typeof StudentIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +124,44 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/student/': {
+      id: '/student/'
+      path: '/student'
+      fullPath: '/student/'
+      preLoaderRoute: typeof StudentIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student/profile': {
+      id: '/student/profile'
+      path: '/student/profile'
+      fullPath: '/student/profile'
+      preLoaderRoute: typeof StudentProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student/otp': {
+      id: '/student/otp'
+      path: '/student/otp'
+      fullPath: '/student/otp'
+      preLoaderRoute: typeof StudentOtpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student/ai': {
+      id: '/student/ai'
+      path: '/student/ai'
+      fullPath: '/student/ai'
+      preLoaderRoute: typeof StudentAiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LoginRoute: LoginRoute,
+  StudentAiRoute: StudentAiRoute,
+  StudentOtpRoute: StudentOtpRoute,
+  StudentProfileRoute: StudentProfileRoute,
+  StudentIndexRoute: StudentIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
