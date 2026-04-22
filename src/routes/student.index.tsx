@@ -16,7 +16,10 @@ function StudentDashboard() {
   const navigate = useNavigate();
   const overall = getOverall(studentSubjects);
   const isDefaulter = overall < 75;
-  const user = typeof window !== "undefined" ? getUser() : { name: "Student", id: "" };
+  const user =
+    typeof window !== "undefined"
+      ? getUser()
+      : { name: "", id: "", department: "", semester: "" };
   const [activeSession, setActiveSession] = useState<ReturnType<typeof getActiveSession>>(null);
   const [showNotif, setShowNotif] = useState(false);
 
@@ -34,7 +37,9 @@ function StudentDashboard() {
         <div className="flex items-start justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest opacity-80">Welcome</p>
-            <h1 className="font-display text-2xl font-bold">{user.name.split(" ")[0]} 👋</h1>
+            <h1 className="font-display text-2xl font-bold">
+              {(user.name || "Student").split(" ")[0]} 👋
+            </h1>
             <p className="mt-1 text-xs opacity-80">{user.id}</p>
           </div>
           <button

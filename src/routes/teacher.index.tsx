@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Radio, X, Bell, BookOpen } from "lucide-react";
+import { Play, Radio, X, Bell, BookOpen, Users } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -15,7 +15,13 @@ import {
 import { BottomNav } from "@/components/BottomNav";
 import { AIInsightCard } from "@/components/AIInsightCard";
 import { teacherSubjects, monthlyAttendance } from "@/lib/mockData";
-import { startSession, endSession, getActiveSession, getUser } from "@/lib/session";
+import {
+  startSession,
+  endSession,
+  getActiveSession,
+  getUser,
+  getStudents,
+} from "@/lib/session";
 
 export const Route = createFileRoute("/teacher/")({
   component: TeacherDashboard,
@@ -26,10 +32,22 @@ function genOtp() {
 }
 
 function TeacherDashboard() {
-  const user = typeof window !== "undefined" ? getUser() : { name: "Teacher", id: "" };
+  const user =
+    typeof window !== "undefined"
+      ? getUser()
+      : { name: "", id: "", department: "", semester: "" };
   const [activeSubject, setActiveSubject] = useState<string | null>(null);
   const [otp, setOtp] = useState("");
   const [remaining, setRemaining] = useState(30);
+  const [students, setStudents] = useState<ReturnType<typeof getStudents>>([]);
+
+  useEffect(() => {
+    setStudents(getStudents());
+  }, []);
+
+  const myStudents = user.department
+    ? students.filter((s) => s.department === user.department)
+    : students;
 
   useEffect(() => {
     const s = getActiveSession();
@@ -81,8 +99,11 @@ function TeacherDashboard() {
         <div className="flex items-start justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest opacity-80">Faculty</p>
-            <h1 className="font-display text-2xl font-bold">{user.name}</h1>
-            <p className="mt-1 text-xs opacity-80">{user.id} · CSE Dept</p>
+            <h1 className="font-display text-2xl font-bold">{user.name || "Teacher"}</h1>
+            <p className="mt-1 text-xs opacity-80">
+              {user.id}
+              {user.department ? ` · ${user.department}` : ""}
+            </p>
           </div>
           <button className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15 backdrop-blur">
             <Bell className="h-5 w-5" />
@@ -196,7 +217,65 @@ function TeacherDashboard() {
           </div>
         </div>
 
-        {/* Chart */}
+        {/* My Students */}
+        <div className="rounded-3xl bg-card p-5 shadow-card ring-1 ring-border">
+          <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-primary">
+                <Users className="h-4 w-4" />
+              </div>
+              <div>
+                <h2 className="font-display text-base font-semibold">My Students</h2>
+                <p className="text-[11px] text-muted-foreground">
+                  {user.department || "All departments"}
+                </p>
+              </div>
+            </div>
+            <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
+              {myStudents.length} registered
+            </span>
+          </div>
+
+          {myStudents.length === 0 ? (
+            <div className="rounded-2xl bg-muted/40 p-5 text-center">
+              <p className="text-sm font-medium">No students yet</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Students who register in {user.department || "your department"} will appear here.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {myStudents.map((s, i) => (
+                <motion.div
+                  key={s.id}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="flex items-center gap-3 rounded-xl bg-muted/40 p-3"
+                >
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-primary text-xs font-bold text-primary-foreground">
+                    {s.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .slice(0, 2)
+                      .join("")}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="truncate text-sm font-semibold">{s.name}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {s.id} · Sem {s.semester}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-card px-2 py-0.5 text-[10px] font-semibold text-muted-foreground ring-1 ring-border">
+                    {s.department.split(" ")[0]}
+                  </span>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </div>
+
+
         <div className="rounded-3xl bg-card p-5 shadow-card ring-1 ring-border">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-display text-base font-semibold">Monthly Trends · DBMS</h2>
