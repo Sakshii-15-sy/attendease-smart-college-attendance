@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, FileText, FileSpreadsheet, FileType2, Loader2, Download } from "lucide-react";
-import { getStudents } from "@/lib/session";
 import { buildReport } from "@/lib/reportData";
 import { downloadPdf, downloadXlsx, downloadDocx } from "@/lib/reportGenerators";
 
@@ -53,18 +52,35 @@ export function DownloadReportModal({ open, onClose, department }: Props) {
 
   const handle = async (fmt: Format) => {
     setError(null);
-    const all = getStudents();
-    const students = department ? all.filter((s) => s.department === department) : all;
-    if (students.length === 0) {
-      setError("No registered students to include in the report yet.");
-      return;
-    }
     setBusy(fmt);
     try {
+      // Fetch real students from database
+      const res = await fetch('http://10.141.105.80:3000/api/teacher/students');
+      const data = await res.json();
+      
+      if (!data.students || data.students.length === 0) {
+        setError("No students found in database.");
+        setBusy(null);
+        return;
+      }
+
+      // Map database students to report format
+      const students = data.students.map((s: any) => ({
+        name: s.student_name,
+        id: s.student_roll_no,
+        department: department || "Electronics & Telecom",
+        semester: "6",
+        password: "",
+        role: "student" as const,
+        attendance: s.attendance_pct ? Math.round(s.attendance_pct) : 0,
+        subject: s.subject_name,
+      }));
+
       const rows = buildReport(students);
       if (fmt === "pdf") await downloadPdf(rows, department);
       else if (fmt === "xlsx") await downloadXlsx(rows, department);
       else await downloadDocx(rows, department);
+
       setTimeout(() => {
         setBusy(null);
         onClose();

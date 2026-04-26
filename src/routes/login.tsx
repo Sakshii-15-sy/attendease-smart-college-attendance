@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Eye, EyeOff, IdCard, Lock } from "lucide-react";
-import { findAccount, getRole, setUser } from "@/lib/session";
+import { getRole, setUser } from "@/lib/session";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -22,7 +22,7 @@ function LoginPage() {
     else setLocalRole(r);
   }, [navigate]);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     const id = collegeId.trim();
@@ -30,22 +30,46 @@ function LoginPage() {
       setError("Please enter your ID and password.");
       return;
     }
-    const acc = findAccount(role, id);
-    if (!acc) {
-      setError("No account found. Please register first.");
-      return;
+
+    try {
+      const endpoint = role === "student" 
+        ? "http://10.141.105.80:3000/api/student/login"
+        : "http://10.141.105.80:3000/api/teacher/login";
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: id, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || "Invalid credentials.");
+        return;
+      }
+
+      if (role === "student") {
+        setUser(
+          data.student.username,
+          data.student.roll_no,
+          "Electronics & Telecom",
+          "6"
+        );
+        navigate({ to: "/student" });
+      } else {
+        setUser(
+          data.teacher.username,
+          String(data.teacher.id),
+          "Electronics & Telecom",
+          ""
+        );
+        navigate({ to: "/teacher" });
+      }
+
+    } catch (err) {
+      setError("Cannot connect to server. Make sure backend is running.");
     }
-    if (acc.password !== password) {
-      setError("Incorrect password.");
-      return;
-    }
-    setUser(
-      acc.name,
-      acc.id,
-      acc.department,
-      acc.role === "student" ? acc.semester : "",
-    );
-    navigate({ to: role === "student" ? "/student" : "/teacher" });
   };
 
   return (

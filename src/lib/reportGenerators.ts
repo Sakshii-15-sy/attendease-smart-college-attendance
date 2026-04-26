@@ -1,4 +1,5 @@
-import { saveAs } from "file-saver";
+import pkg from 'file-saver';
+const { saveAs } = pkg;
 import type { ReportRow } from "./reportData";
 
 const fileBase = () => {

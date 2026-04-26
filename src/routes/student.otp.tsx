@@ -2,7 +2,8 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Radio, CheckCircle2, XCircle } from "lucide-react";
-import { getActiveSession } from "@/lib/session";
+import { getActiveSessionAPI, markAttendanceAPI } from "@/lib/api";
+import { getUser } from "@/lib/session";
 
 export const Route = createFileRoute("/student/otp")({
   component: OtpEntry,
@@ -10,30 +11,33 @@ export const Route = createFileRoute("/student/otp")({
 
 function OtpEntry() {
   const navigate = useNavigate();
-  const [session, setSession] = useState<ReturnType<typeof getActiveSession>>(null);
+  const user = getUser();
+  const [session, setSession] = useState<any>(null);
   const [otp, setOtp] = useState("");
   const [remaining, setRemaining] = useState(30);
   const [status, setStatus] = useState<"idle" | "success" | "fail">("idle");
 
+  // Fetch active session from real database
   useEffect(() => {
-    const s = getActiveSession();
-    if (!s) {
-      navigate({ to: "/student" });
-      return;
-    }
-    setSession(s);
-  }, [navigate]);
-
-  useEffect(() => {
-    if (status !== "idle") return;
-    const t = setInterval(() => {
-      const s = getActiveSession();
-      if (!s) {
-        setStatus("fail");
-        clearInterval(t);
+    getActiveSessionAPI().then((data) => {
+      if (!data.active) {
+        navigate({ to: "/student" });
         return;
       }
-      const left = Math.max(0, Math.ceil((s.expiresAt - Date.now()) / 1000));
+      setSession(data.session);
+      // Calculate remaining time
+      const expiresAt = new Date(data.session.otp_expires_at).getTime();
+      const left = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
+      setRemaining(left);
+    });
+  }, [navigate]);
+
+  // Countdown timer
+  useEffect(() => {
+    if (status !== "idle" || !session) return;
+    const t = setInterval(() => {
+      const expiresAt = new Date(session.otp_expires_at).getTime();
+      const left = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
       setRemaining(left);
       if (left === 0) {
         setStatus("fail");
@@ -41,18 +45,27 @@ function OtpEntry() {
       }
     }, 250);
     return () => clearInterval(t);
-  }, [status]);
+  }, [status, session]);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (status !== "idle") return;
-    const s = getActiveSession();
-    if (!s) {
+    if (status !== "idle" || !session) return;
+
+    try {
+      console.log('Marking attendance:', session.id, user.id, otp.trim());
+      const result = await markAttendanceAPI(
+        session.id,
+        user.id,
+        otp.trim()
+      );
+      if (result.success) {
+        setStatus("success");
+      } else {
+        setStatus("fail");
+      }
+    } catch (err) {
       setStatus("fail");
-      return;
     }
-    if (otp.trim() === s.otp) setStatus("success");
-    else setStatus("fail");
   };
 
   const handleInput = (v: string) => {
@@ -72,7 +85,7 @@ function OtpEntry() {
         </div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-widest text-primary">Session Detected</p>
-          <h1 className="font-display text-2xl font-bold">{session?.subject ?? "—"} 📡</h1>
+          <h1 className="font-display text-2xl font-bold">Live Session 📡</h1>
         </div>
       </div>
 
@@ -86,7 +99,9 @@ function OtpEntry() {
             onSubmit={submit}
             className="mt-8 rounded-3xl bg-card p-6 shadow-card ring-1 ring-border"
           >
-            <p className="text-center text-sm text-muted-foreground">Enter the 6-digit OTP shown by your teacher</p>
+            <p className="text-center text-sm text-muted-foreground">
+              Enter the 6-digit OTP shown by your teacher
+            </p>
 
             <input
               autoFocus
@@ -138,7 +153,9 @@ function OtpEntry() {
               <CheckCircle2 className="h-16 w-16 text-success-foreground" strokeWidth={2.5} />
             </motion.div>
             <h2 className="mt-6 font-display text-2xl font-bold">Attendance Marked! ✅</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Your presence has been recorded for {session?.subject}.</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Your presence has been recorded successfully.
+            </p>
             <button
               onClick={() => navigate({ to: "/student" })}
               className="mt-8 rounded-xl bg-gradient-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-card"
@@ -163,9 +180,13 @@ function OtpEntry() {
             >
               <XCircle className="h-16 w-16 text-destructive-foreground" strokeWidth={2.5} />
             </motion.div>
-            <h2 className="mt-6 font-display text-2xl font-bold text-destructive">Attendance not recorded</h2>
+            <h2 className="mt-6 font-display text-2xl font-bold text-destructive">
+              Attendance not recorded
+            </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              {remaining === 0 ? "Session timed out." : "OTP didn't match. Please ask your teacher to retry."}
+              {remaining === 0
+                ? "Session timed out."
+                : "OTP didn't match. Please ask your teacher to retry."}
             </p>
             <button
               onClick={() => navigate({ to: "/student" })}
