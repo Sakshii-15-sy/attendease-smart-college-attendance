@@ -33,8 +33,8 @@ function LoginPage() {
 
     try {
       const endpoint = role === "student" 
-        ? "http://10.141.105.80:3000/api/student/login"
-        : "http://10.141.105.80:3000/api/teacher/login";
+        ? "http://localhost:3000/api/student/login"
+        : "http://localhost:3000/api/teacher/login";
 
       const response = await fetch(endpoint, {
         method: "POST",

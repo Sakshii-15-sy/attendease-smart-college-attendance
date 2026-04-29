@@ -15,11 +15,8 @@ import {
 } from "recharts";
 import { BottomNav } from "@/components/BottomNav";
 import { AIInsightCard } from "@/components/AIInsightCard";
-import { monthlyAttendance } from "@/lib/mockData";
-import { startSessionAPI, getSessionAttendance } from "@/lib/api";
+import { startSessionAPI, getSessionAttendance, getMonthlyTrends, getAIInsight } from "@/lib/api";
 import { getUser } from "@/lib/session";
-import { getMonthlyTrends } from "@/lib/api";
-import { getAIInsight } from "@/lib/api";
 
 export const Route = createFileRoute("/teacher/")({
   component: TeacherDashboard,
@@ -45,7 +42,7 @@ function TeacherDashboard() {
   // Fetch teacher subjects
   useEffect(() => {
     if (!user.id) return;
-    fetch(`http://10.141.105.80:3000/api/teacher/subjects/${user.id}`)
+    fetch(`http://localhost:3000/api/teacher/subjects/${user.id}`)
       .then(res => res.json())
       .then(data => {
         if (data.subjects) setTeacherSubjects(data.subjects);
@@ -55,13 +52,33 @@ function TeacherDashboard() {
 
   // Fetch all students
   useEffect(() => {
-    fetch('http://10.141.105.80:3000/api/teacher/students')
+    fetch('http://localhost:3000/api/teacher/students')
       .then(res => res.json())
       .then(data => {
         if (data.students) setStudents(data.students);
       })
       .catch(console.error);
   }, []);
+
+  // Monthly trends
+  useEffect(() => {
+    if (teacherSubjects.length === 0) return;
+    getMonthlyTrends(teacherSubjects[0].id)
+      .then(data => {
+        if (data.trends) setMonthlyTrends(data.trends);
+      })
+      .catch(console.error);
+  }, [teacherSubjects]);
+
+  // AI Insight
+  useEffect(() => {
+    if (students.length === 0) return;
+    getAIInsight(students)
+      .then(data => {
+        if (data.insight) setAiInsight(data.insight);
+      })
+      .catch(console.error);
+  }, [students]);
 
   // Countdown timer
   useEffect(() => {
@@ -80,24 +97,6 @@ function TeacherDashboard() {
     return () => clearInterval(t);
   }, [activeSubject, currentSessionId]);
 
-  useEffect(() => {
-  if (teacherSubjects.length === 0) return;
-  getMonthlyTrends(teacherSubjects[0].id)
-    .then(data => {
-      if (data.trends) setMonthlyTrends(data.trends);
-    })
-    .catch(console.error);
-}, [teacherSubjects]);
-
-useEffect(() => {
-  if (students.length === 0) return;
-  getAIInsight(students)
-    .then(data => {
-      if (data.insight) setAiInsight(data.insight);
-    })
-    .catch(console.error);
-}, [students]);
-
   const start = async (subjectId: number, subjectName: string) => {
     try {
       const data = await startSessionAPI(Number(user.id), subjectId);
@@ -107,13 +106,11 @@ useEffect(() => {
         setRemaining(30);
         setCurrentSessionId(data.session_id);
         setSessionAttendance([]);
-
-        // Poll attendance every 3 seconds for 35 seconds
         const pollAttendance = setInterval(async () => {
           const result = await getSessionAttendance(data.session_id);
           if (result.attendance) setSessionAttendance(result.attendance);
-        }, 3000);
-        setTimeout(() => clearInterval(pollAttendance), 35000);
+        }, 2000);
+        (window as any)._attendancePoll = pollAttendance;
       }
     } catch (err) {
       console.error('Failed to start session', err);
@@ -124,6 +121,9 @@ useEffect(() => {
     setActiveSubject(null);
     setOtp("");
     setCurrentSessionId(null);
+    if ((window as any)._attendancePoll) {
+      clearInterval((window as any)._attendancePoll);
+    }
   };
 
   return (
@@ -205,8 +205,8 @@ useEffect(() => {
                 />
               </div>
 
-              {/* Present students */}
-              {sessionAttendance.length > 0 && (
+              {/* Present students inside session card */}
+              {sessionAttendance.filter((a: any) => a.present).length > 0 && (
                 <div className="mt-4">
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                     ✅ Marked Present ({sessionAttendance.filter((a: any) => a.present).length})
@@ -247,7 +247,7 @@ useEffect(() => {
                   </div>
                   <div className="flex-1">
                     <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      Electronics & Telecom
+                      Electronics & Telecommunication
                     </p>
                     <p className="text-sm font-semibold">{s.subject_name}</p>
                   </div>
@@ -272,7 +272,7 @@ useEffect(() => {
           </div>
         </div>
 
-        {/* My Students */}
+        {/* Present Today - only students who marked attendance */}
         <div className="rounded-3xl bg-card p-5 shadow-card ring-1 ring-border">
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -280,44 +280,41 @@ useEffect(() => {
                 <Users className="h-4 w-4" />
               </div>
               <div>
-                <h2 className="font-display text-base font-semibold">My Students</h2>
-                <p className="text-[11px] text-muted-foreground">All Students</p>
+                <h2 className="font-display text-base font-semibold">Present Today</h2>
+                <p className="text-[11px] text-muted-foreground">Students who marked attendance</p>
               </div>
             </div>
             <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
-              {students.length} registered
+              {sessionAttendance.filter((a: any) => a.present).length} present
             </span>
           </div>
 
-          {students.length === 0 ? (
+          {sessionAttendance.filter((a: any) => a.present).length === 0 ? (
             <div className="rounded-2xl bg-muted/40 p-5 text-center">
-              <p className="text-sm font-medium">No students yet</p>
+              <p className="text-sm font-medium">No attendance marked yet</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Start a session and students will appear here.
+              </p>
             </div>
           ) : (
             <div className="space-y-2">
-              {students.map((s: any, i: number) => (
+              {sessionAttendance.filter((a: any) => a.present).map((a: any, i: number) => (
                 <motion.div
                   key={i}
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="flex items-center gap-3 rounded-xl bg-muted/40 p-3"
+                  className="flex items-center gap-3 rounded-xl bg-success/10 p-3"
                 >
                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-primary text-xs font-bold text-primary-foreground">
-                    {(s.student_name || "S")[0]}
+                    {(a.student_name || "S")[0]}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="truncate text-sm font-semibold">{s.student_name}</p>
-                    <p className="text-[11px] text-muted-foreground">{s.student_roll_no}</p>
+                    <p className="truncate text-sm font-semibold">{a.student_name}</p>
+                    <p className="text-[11px] text-muted-foreground">{a.roll_no}</p>
                   </div>
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${
-                    Number(s.attendance_pct) < 65
-                      ? "bg-destructive/10 text-destructive ring-destructive/20"
-                      : Number(s.attendance_pct) < 75
-                      ? "bg-warning/10 text-warning-foreground ring-warning/20"
-                      : "bg-success/10 text-success ring-success/20"
-                  }`}>
-                    {s.attendance_pct ? `${Math.round(s.attendance_pct)}%` : "N/A"}
+                  <span className="rounded-full bg-success/20 px-2 py-0.5 text-[10px] font-semibold text-success">
+                    ✅ Present
                   </span>
                 </motion.div>
               ))}
@@ -326,34 +323,35 @@ useEffect(() => {
         </div>
 
         {/* Monthly Trends */}
-        <div className="rounded-3xl bg-card p-5 shadow-card ring-1 ring-border">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-display text-base font-semibold">
-              Monthly Trends · {teacherSubjects[0]?.subject_name || "Subject"}
-            </h2>
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">2026</span>
+        {monthlyTrends.length > 0 && (
+          <div className="rounded-3xl bg-card p-5 shadow-card ring-1 ring-border">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="font-display text-base font-semibold">
+                Monthly Trends · {teacherSubjects[0]?.subject_name || "Subject"}
+              </h2>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">2026</span>
+            </div>
+            <div className="h-56">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthlyTrends} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0.02 300)" vertical={false} />
+                  <XAxis dataKey="month" tick={{ fontSize: 11, fill: "oklch(0.50 0.04 290)" }} />
+                  <YAxis tick={{ fontSize: 11, fill: "oklch(0.50 0.04 290)" }} />
+                  <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid oklch(0.92 0.02 300)", fontSize: 12 }} />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Bar dataKey="present" fill="oklch(0.65 0.18 150)" radius={[6, 6, 0, 0]} name="Present" />
+                  <Bar dataKey="absent" fill="oklch(0.75 0.17 60)" radius={[6, 6, 0, 0]} name="Absent" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-          <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthlyAttendance} margin={{ top: 5, right: 0, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0.02 300)" vertical={false} />
-                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "oklch(0.50 0.04 290)" }} />
-                <YAxis tick={{ fontSize: 11, fill: "oklch(0.50 0.04 290)" }} />
-                <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid oklch(0.92 0.02 300)", fontSize: 12 }} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="present" fill="oklch(0.65 0.18 150)" radius={[6, 6, 0, 0]} name="Present" />
-                <Bar dataKey="absent" fill="oklch(0.75 0.17 60)" radius={[6, 6, 0, 0]} name="Absent" />
-                <Bar dataKey="defaulter" fill="oklch(0.60 0.22 22)" radius={[6, 6, 0, 0]} name="Defaulter" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
+        )}
 
         <AIInsightCard
           title="AI Pattern Analysis"
           message={aiInsight}
         />
-        </div>
+      </div>
 
       <BottomNav role="teacher" />
 

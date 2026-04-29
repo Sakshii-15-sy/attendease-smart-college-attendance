@@ -12,12 +12,18 @@ export const Route = createFileRoute("/student/otp")({
 function OtpEntry() {
   const navigate = useNavigate();
   const user = getUser();
+  // Always get student roll no directly from localStorage to avoid teacher ID mixup
+  // Get roll number - always use student-specific key
+  const currentRole = localStorage.getItem('attendease.role');
+  const rollNo = currentRole === 'student' 
+    ? localStorage.getItem('attendease.student.id') || user.id
+    : user.id;
+  
   const [session, setSession] = useState<any>(null);
   const [otp, setOtp] = useState("");
   const [remaining, setRemaining] = useState(30);
   const [status, setStatus] = useState<"idle" | "success" | "fail">("idle");
 
-  // Fetch active session from real database
   useEffect(() => {
     getActiveSessionAPI().then((data) => {
       if (!data.active) {
@@ -25,14 +31,12 @@ function OtpEntry() {
         return;
       }
       setSession(data.session);
-      // Calculate remaining time
       const expiresAt = new Date(data.session.otp_expires_at).getTime();
       const left = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
       setRemaining(left);
     });
   }, [navigate]);
 
-  // Countdown timer
   useEffect(() => {
     if (status !== "idle" || !session) return;
     const t = setInterval(() => {
@@ -51,19 +55,22 @@ function OtpEntry() {
     e.preventDefault();
     if (status !== "idle" || !session) return;
 
+    console.log('Marking attendance - Session ID:', session.id, 'Roll No:', rollNo, 'OTP:', otp.trim());
+
     try {
-      console.log('Marking attendance:', session.id, user.id, otp.trim());
       const result = await markAttendanceAPI(
         session.id,
-        user.id,
+        rollNo,
         otp.trim()
       );
+      console.log('Result:', result);
       if (result.success) {
         setStatus("success");
       } else {
         setStatus("fail");
       }
     } catch (err) {
+      console.error('Error:', err);
       setStatus("fail");
     }
   };

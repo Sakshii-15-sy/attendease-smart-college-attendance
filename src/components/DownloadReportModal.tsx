@@ -55,7 +55,7 @@ export function DownloadReportModal({ open, onClose, department }: Props) {
     setBusy(fmt);
     try {
       // Fetch real students from database
-      const res = await fetch('http://10.141.105.80:3000/api/teacher/students');
+      const res = await fetch('http://localhost:3000/api/teacher/students');
       const data = await res.json();
       
       if (!data.students || data.students.length === 0) {
